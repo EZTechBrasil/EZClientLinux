@@ -21,12 +21,12 @@ To install the EZClient.cpp project follow these steps:
 ## Step 3 - Configuring and Running
 
 Open the source code of the project and choice the IP address to access the EZServer according to your needs.
-[![EZClientCppConfigAdress](https://github.com/EZTechBrasil/EZClientCpp/blob/master/Pictures/EZClientCppAcess.png
-)](https://github.com/EZTechBrasil/EZClientCpp/blob/master/Pictures/EZClientCppAcess.png
+[![EZClientCppConfigAdress](https://github.com/EZTechBrasil/EZClientLinux/blob/master/Pictures/img1.png
+)](https://github.com/EZTechBrasil/EZClientLinux/blob/master/Pictures/img1.png
 )
 
 The options are adapted to the tests required to complete the integration.
-[![EZClientCppMain](https://github.com/EZTechBrasil/EZClientCpp/blob/master/Pictures/EZClientCppMain.png)](https://github.com/EZTechBrasil/EZClientCpp/blob/master/Pictures/EZClientCppMain.png)
+[![EZClientCppMain](https://github.com/EZTechBrasil/EZClientLinux/blob/master/Pictures/img2.png)](https://github.com/EZTechBrasil/EZClientLinux/blob/master/Pictures/img2.png)
 
 ## Step 4 - Homologation Test
 
