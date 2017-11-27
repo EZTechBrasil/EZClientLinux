@@ -162,13 +162,6 @@ void DeleteTank() ;
 void ZigbeeDeviceRegistration() ;
 void DeleteZigbeeDevice() ;
 
-
-//  -------- Diego teste ---------- //
-
-
-void Teste();
-
-
 //-----------------------------------------------------------------------------
 #endif // __EZ_CLIENT_MAIN__
 
