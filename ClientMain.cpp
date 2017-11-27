@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Empresa     : EzTech Tecnologia e Automação Ltda
+//  Empresa     : EzTech Tecnologia e AutomaÃ§Ã£o Ltda
 //        				 http://www.eztech.ind.br/
 //
 //	Created     : 24/08/2012
@@ -68,7 +68,7 @@ bool	isXPertModule = false ;
 
 
 bool runEvents   = false;					// Processando por Pooling
-bool isConnected = false;					// Não conectado ao Servidor
+bool isConnected = false;					// NÃ£o conectado ao Servidor
 char EZServerAddr[MAX_PATH] = "EZServerCE";	// Endereco padrao do servidor
 BSTR	AttEZServerAddr ;
 int  appPump = 1;								// Bomba em uso
@@ -247,7 +247,6 @@ char ShowMenu( int menuLevel )
 			WriteMessage( "\n\t	B - Version Compatibility") ;
 			WriteMessage( "\n\t	C - License Verification") ;
 			WriteMessage( "\n\t	D - Disconnection with EZTech") ;
-			WriteMessage( "\n\t	T - Teste");
 			break ;
 
 		case DELIVERY_READING_MENU: 
@@ -375,9 +374,6 @@ void BasicGoodPractice()
 			break ;
 		case 'D': case 'd':
 			ClientLogoff() ;
-			break ;
-		case 'T': case 't':
-			Teste();
 			break ;
 		default:
 			WriteMessage("\n Unknown command!") ;
@@ -516,15 +512,6 @@ void ClientLogoff()
 		return;
 	}
 
-}
-
-void Teste()
-{
-	
-	WriteMessage("Teste da minha funcao\n");
-	fflush(stdin) ;
-	int c;
-	c = getchar(); 
 }
 
 //----------------- DeliveriesReading ----------------------//
@@ -2300,7 +2287,7 @@ void DeleteZigbeeDevice()
 
 
 
-// ------------------ Outras funções ---------------------------------//
+// ------------------ Outras funÃ§Ãµes ---------------------------------//
 
 /*BSTR CharToBstr(  const char* text )
 {
@@ -2309,7 +2296,7 @@ void DeleteZigbeeDevice()
     mbstowcs( res , text , size );
 	return res ;
 }*/
-/* --------------------- funções antigas -------------------------------//
+/* --------------------- funÃ§Ãµes antigas -------------------------------//
 
 
 
@@ -2318,7 +2305,7 @@ void DeleteZigbeeDevice()
 
 
 
-                As funções abaixo serão verificadas.
+                As funÃ§Ãµes abaixo serÃ£o verificadas.
 
 
 
@@ -2374,7 +2361,7 @@ void CompanyID(short HoseNumber, short PumpNumber, char *cid)
 	    case  2: Offset = 0x44;
 	    case  3: Offset = 0x84;
 	    case  4: Offset = 0xC4;
-		default: // Outros valores são tratados como Bico 1
+		default: // Outros valores sÃ£o tratados como Bico 1
 			Offset = 0x04;
 			break;
 	}
@@ -2598,7 +2585,7 @@ void ChangePrice()
 	  }
 	}
 
-    // Faz ajuste do preço na bomba
+    // Faz ajuste do preÃ§o na bomba
     if( GoodResult( EZInterface.SetHosePrices( IdBico, Duracao, Tipo, Valor1, Valor2) ) )
 	{
 		WriteMessage("\n\tPreco Novo: Bomba %02d Bico %02d Preco1 R$%.03f Preco2 R$%.03f (Duraticao %d Tipo %d)",
