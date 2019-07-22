@@ -37,5 +37,5 @@ After completing the implementation make the tests defined in the homologation w
 
 For more details on APIs, download the development manual.
 
-[![Quickstart Manual](https://github.com/EZTechBrasil/EZClientCpp/blob/Eric/Pictures/Developer.png)](http://www.execweb.com.br/eztech/EZAdmin/downloads/ManualDesenvolvimento.pdf)
+[![Quickstart Manual](https://github.com/EZTechBrasil/EZClientCpp/blob/master/Pictures/Developer.png?raw=true)](http://www.execweb.com.br/eztech/EZAdmin/downloads/ManualDesenvolvimento.pdf)
 
