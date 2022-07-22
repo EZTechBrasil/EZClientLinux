@@ -507,7 +507,7 @@ typedef enum
 
 #if !defined(_LINUX_)
 
-typedef long (__cdecl *TDriverEntry) (void* );
+typedef LONG (__cdecl *TDriverEntry) (void* );
 
 typedef struct TDriverArgs 
 {
@@ -516,12 +516,12 @@ typedef struct TDriverArgs
 	short _driverID ;
 	short _driverNo ;
 	wchar_t _protocolINIKey[ 21 ] ;
-	long _protocolID ;
-	long _deviceType ;
+	LONG _protocolID ;
+	LONG _deviceType ;
 	bool _standalone ;
 	wchar_t _serialNo[ 11 ];
 	wchar_t _portName[ 21 ]; 
-	long _runningTotalRate ;
+	LONG _runningTotalRate ;
 	TDriverEntry _driverEntry ;
 } TDriverArgs ;
 

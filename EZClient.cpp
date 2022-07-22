@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Empresa     :  EzTech Tecnologia e Automação Ltda
+//  Empresa     :  EzTech Tecnologia e Automaï¿½ï¿½o Ltda
 //        				 http://www.eztech.ind.br/
 //
 //	Created     : 24/08/2012
@@ -381,6 +381,8 @@ int CEZClient::LoadAPIs(char* dllpath)
 	SetDeliveryPropertiesEx3=(typeSetDeliveryPropertiesEx3) GetProcAddress(dllHandle,"SetDeliveryPropertiesEx3");
 	if(SetDeliveryPropertiesEx3==NULL) return -1086;
 
+
+
 	GetDeliverySummary=(typeGetDeliverySummary) GetProcAddress(dllHandle,"GetDeliverySummary");
 	if(GetDeliverySummary==NULL) return -1087;
 
@@ -704,6 +706,10 @@ int CEZClient::LoadAPIs(char* dllpath)
 	SetDateTime=(typeSetDateTime) GetProcAddress(dllHandle,"SetDateTime");
 	if(SetDateTime==NULL) return -1212;
 
+	GetDeliveryPropertiesEx4=(typeGetDeliveryPropertiesEx4) GetProcAddress(dllHandle,"GetDeliveryPropertiesEx4");
+	if(GetDeliveryPropertiesEx4==NULL) return -1213;
+	
+
 	dllLoaded =	true;
 
 	return 0;
@@ -933,7 +939,7 @@ void CEZClient::GetLastErrorText(DWORD erro, LPTSTR lpszBuffer, DWORD dwSize)
     dwFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ARGUMENT_ARRAY;
     dwRet = FormatMessage(dwFlags, NULL, erro, LANG_NEUTRAL,(LPTSTR)&lpszTemp, 0, NULL);
 
-    if( !dwRet || ((long)dwSize<(long)dwRet+14) )
+    if( !dwRet || ((LONG)dwSize<(LONG)dwRet+14) )
       lpszBuffer[0] = TEXT('\0');
     else
     {
@@ -1005,7 +1011,7 @@ int CEZClient::KBhit()
 	int hkey = 0;
 
 #if defined(__linux__)
-    static const int STDIN = 0;
+    // static const int STDIN = 0;
     termios term;
 
 	if( !oldTerm.c_lflag )

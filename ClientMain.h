@@ -65,8 +65,8 @@ char ShowMenu(int menuLevel);
 void EndMessage();
 
 void CompanyID(short HoseNumber, short PumpNumber, char *cid);
-static wchar_t* charToWChar(const char* text);
-PBSTR MakeBSTR( wchar_t* pStr , int Len );
+// static wchar_t* charToWChar(const char* text);
+PBSTR MakeBSTR( TCHAR* pStr , int Len );
 
 void CheckLogin();
 
@@ -101,7 +101,7 @@ void ClientLogoff() ;
 // Deliveries Reading
 void DeliveriesReading() ;
 
-void ReadAllDeliveries() ;
+void ReadAllDeliveries( bool ReadAll ) ;
 
 // Pump Basic Control
 void PumpBasicControl() ;

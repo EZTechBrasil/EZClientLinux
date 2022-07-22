@@ -49,7 +49,6 @@
 #include "version.h"
 #include "ClientMain.h"
 
-#define NOBODY -1
 #define	USB1	1
 #define ALLGRADE 
 //#define FREE_SYS_STR( b ) { if( b != NULL ) { SysFreeString( b ) ; b = NULL ; } ; }
@@ -64,16 +63,14 @@ bool	isZigBeeModule = false ;
 bool	isEZMonitorModule = false ;
 bool	isTankManagementModule = false ;
 bool	isDevelopmentModule = false ;
-bool	isXPertModule = false ;
-
 
 bool runEvents   = false;					// Processando por Pooling
 bool isConnected = false;					// Não conectado ao Servidor
-char EZServerAddr[MAX_PATH] = "EZServerCE";	// Endereco padrao do servidor
-BSTR	AttEZServerAddr ;
+TCHAR EZServerAddr[MAX_PATH] = "EZServerCE";	// Endereco padrao do servidor
+// BSTR	AttEZServerAddr ;
 int  appPump = 1;								// Bomba em uso
 int  lastStatus[MAX_PATH];	
-char	versionCompatible[MAX_PATH] = "2,3,0,1" ;				// Status atual das bombas
+TCHAR	versionCompatible[MAX_PATH] = "2,5,1,8" ;				// Status atual das bombas
 
 
 //-----------------------------------------------------------------------------
@@ -86,7 +83,7 @@ int main(int argc, char *argv[])
 
 	memset(lastStatus, 0, sizeof(lastStatus));
 
-	WriteMessage("\nEZForecourt - EZClient.dll - C\\C++ Demonstracao!");
+	WriteMessage("\nEZForecourt - EZClient.so.1 - C\\C++ Demonstracao!\n");
 
 	CreateAcess();
 
@@ -102,7 +99,7 @@ int main(int argc, char *argv[])
 			else if( !stricmp(argv[ct], "/server") )
 			{
 				ct++; //  pega o proximo parametro da lista
-				if( strlen(argv[ct])>0 )
+				if( STRLEN(argv[ct])>0 )
 					strcpy(EZServerAddr, argv[ct]);
 				else
 				{
@@ -141,20 +138,20 @@ void MainLoop()
 	char chosenType = '?';
 
 	if( runEvents )
-		WriteMessage("\nProcessando Eventos!");
+		WriteMessage("\nProcessando Eventos!\n");
 
 	while( !ExitLoop )
 	{
 		CheckLogin();
 
-		if( !runEvents )
-			PumpsStatus();
-		else
-			CheckEvents();
-
-
 		if( isConnected )
 		{
+
+			if( !runEvents )
+				PumpsStatus();
+			else
+				CheckEvents();
+
 			chosenType = ShowMenu(1);
 
 			switch( chosenType )
@@ -199,8 +196,9 @@ void MainLoop()
 					GeneralConfigurationFacility() ;
 					break ;
 
+				case 'X' :	case 'x' :// exit
 				case '\033':	// ESC
-					WriteMessage( "\n Shutdown!" ) ;
+					WriteMessage( "\n Shutdown!\n" ) ;
 					ExitLoop = true ;
 					break ;
 
@@ -208,16 +206,21 @@ void MainLoop()
 					WriteMessage("\nUnknown command!") ;
 					break ;
 			}
-		}
-
-		// Verifica teclado
-		if( EZInterface.KBhit() )
+		} 
+		else if( EZInterface.KBhit() )
 			chosenType = EZInterface.KBget();
 		else
 			chosenType = 0;
 	}
 
-	WriteMessage("\n");
+	WriteMessage("\nBye!!\n");
+
+	if ( isConnected )
+	{
+		EZInterface.ClientLogoff();
+		isConnected = false ;
+	}
+
 }
 
 char ShowMenu( int menuLevel )
@@ -227,7 +230,7 @@ char ShowMenu( int menuLevel )
 	switch( menuLevel )
 	{
 		case MAIN_MENU:
-			WriteMessage( "\nEZForecourt - EZClient.dll - C\\C++ Demo!         Version: %s", VERSION ) ;
+			WriteMessage( "\nEZForecourt - EZClient.so.1 - C\\C++ Demo!         Version: %s", VERSION ) ;
 			WriteMessage( "\n" ) ;
 			WriteMessage( "\n\t	A - Basic Good Practice") ;
 			WriteMessage( "\n\t	B - Deliveries Reading") ;
@@ -239,10 +242,11 @@ char ShowMenu( int menuLevel )
 			WriteMessage( "\n\t	H - Register Client") ;
 			WriteMessage( "\n\t	I - Tanks and Sensors Reading") ;
 			WriteMessage( "\n\t	J - General Configuration Facility") ;
+			WriteMessage( "\n\t	X - Exit") ;
 			break ;
 
 		case BASIC_GOOD_PRATICE_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Date / Time Update") ;
 			WriteMessage( "\n\t	B - Version Compatibility") ;
 			WriteMessage( "\n\t	C - License Verification") ;
@@ -250,12 +254,13 @@ char ShowMenu( int menuLevel )
 			break ;
 
 		case DELIVERY_READING_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
-			WriteMessage( "\n\t	A - Reading of Pending Deliveries") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
+			WriteMessage( "\n\t	A - Read all Deliveries") ;
+			WriteMessage( "\n\t	B - Read Pending Deliveries") ;
 			break ;
 
 		case PUMP_BASIC_CONTROL_MENU:  
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Temporary Stop") ;
 			WriteMessage( "\n\t	B - Reauthorize Delivery") ;
 			WriteMessage( "\n\t	C - Disable Hose") ;
@@ -266,38 +271,38 @@ char ShowMenu( int menuLevel )
 			break ;
 
 		case PUMP_CONTROL_EXTENDED_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Scheduled Delivery") ;
 			WriteMessage( "\n\t	B - Preset Delivery") ;			
 			break ;
 
 		case PUMP_PRICE_CONTROL_MENU:
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Price Change per Hose") ;
 			WriteMessage( "\n\t	B - Price Change per Grade") ;	
 			break ;
 
 		case REGISTER_ATTENDANT_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Attendant Registration") ;
 			WriteMessage( "\n\t	B - Delete Attendant") ;	
 			WriteMessage( "\n\t	C - Change of Attendant's time");
 			break ;
 
 		case REGISTER_CLIENT_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Client Registration") ;
 			WriteMessage( "\n\t	B - Delete Client") ;	
 			break ;
 
 		case TANKS_SENSORS_READING_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Tank Reading") ;
 			WriteMessage( "\n\t	B - Monitoring Alarm") ;	
 			break ;
 
 		case GENERAL_CONFIGURATION_FACILITY_MENU: 
-			WriteMessage( "\n\n Which functionality do you want to test?") ;
+			WriteMessage( "\n\n Which function would you like to test?") ;
 			WriteMessage( "\n\t	A - Delivery Position Register") ;
 			WriteMessage( "\n\t	B - Delete of Delivery Position") ;	
 			WriteMessage( "\n\t	C - Hose Registration") ;
@@ -315,7 +320,7 @@ char ShowMenu( int menuLevel )
 
 	fflush(stdin);
 	scanf ("\n%c", &chosenType ) ;
-	system("clear") ;	
+	//system("clear") ;	
 
 	return chosenType;
 }
@@ -323,8 +328,8 @@ char ShowMenu( int menuLevel )
 void EndMessage()
 {
 	WriteMessage("\n\n");
-	system("PAUSE");
-	system("clear") ;
+	//system("PAUSE");
+	//system("clear") ;
 }
 
 // ------------------------ GoodResult ----------------------------------------//
@@ -334,16 +339,21 @@ bool GoodResult( int result )
 	if( result == OK_RESULT )	
 		return true ;
 
-	BSTR resultString = EZInterface.ResultString(result);
+	WriteMessage( "\nError: %d\n", result ) ;
 
-	WriteMessage( "\nError: %d %S", result, resultString ) ;
+	//BSTR resultString = EZInterface.ResultString(result);
+
+	//WriteMessage( "\nError: %d %s", result, resultString ) ;
 
 	//FREE_SYS_STR( resultString ) ;
 
 	if( ( result < OK_RESULT && result != INVALID_OBJECT_ID ) || result == NOT_LOGGED_ON_RESULT )
 	{
-		EZInterface.ClientLogoff();
-		isConnected = false ;
+		if ( isConnected )
+		{
+			EZInterface.ClientLogoff();
+			isConnected = false ;
+		}
 	}
 	return false ;
 }
@@ -405,34 +415,43 @@ void SetDateTime()
 void CheckServerVersion()
 {
 
+    int stringLength = 0 ;
+	int index = 0 ;
+
 #if defined( _WIN32 )
     BSTR   ezserverVersion = NULL ;
     if( ! GoodResult( EZInterface.ServerVersion( &ezserverVersion ) ) ) 
     	return;
-    int stringLength = 0 ;
-	int index = 0 ;
-
+ 
 	stringLength = ( int ) SysStringLen( ezserverVersion ) ;
 
 #elif defined( __linux__)
-    BSTR   ezserverVersion[MAX_PATH] ;
-	if( ! GoodResult( EZInterface.ServerVersion( MakeBSTR(ezserverVersion, sizeof(ezserverVersion)/sizeof(wchar_t) ) ) ) )
-		return;
-	int stringLength = 0 ;
-	int index = 0 ;
 
-	stringLength = (int)wcslen( ezserverVersion );
+    TCHAR   ezserverVersion[MAX_PATH] ;
+    TCHAR   soVersion[MAX_PATH] ;
+
+	if( ! GoodResult( EZInterface.ServerVersion( MakeBSTR(ezserverVersion, MAX_PATH ) ) ) )
+		return;
+
+	if( ! GoodResult( EZInterface.DllVersion( MakeBSTR(soVersion, MAX_PATH ) ) ) )
+		return;
+
+	WriteMessage("\nSO Version: %s", soVersion ) ;
+
+	stringLength = (int)STRLEN( ezserverVersion );
+
 #endif
 	
-	char versionPart[MAX_PATH] = "" ;
+	TCHAR versionPart[MAX_PATH] = "" ;
 
-	for ( int i = stringLength - 7 ; i < stringLength ; i++ )
+	for ( int i = stringLength - 7 ; i >= 0 && i < stringLength ; i++ )
 	{
-		versionPart[ index ] = ezserverVersion[ i ] ;
-		index++ ;
+		versionPart[ index++ ] = ezserverVersion[ i ] ;
 	}
 
-	WriteMessage("\nEZServer Version: %S ", ezserverVersion ) ;
+	versionPart[ index++ ] = 0 ; 
+
+	WriteMessage("\nEZServer Version: %s -> %s", ezserverVersion , versionPart ) ;
 
 	if ( ( strcmp ( versionPart , versionCompatible ) >= 0 ) )
 	{		
@@ -442,8 +461,6 @@ void CheckServerVersion()
 	{
 		WriteMessage("\nIncompatible Version " ) ;
 	}
-
-	//FREE_SYS_STR( ezserverVersion ) ;
 
 	EndMessage() ;
 }
@@ -492,11 +509,6 @@ void CheckLicenseStatus()
 			isDevelopmentModule = true ;
 		}
 
-		if ( licenseType & XPERT_LICENSE_MASK )
-		{		
-			WriteMessage("\nXPERT ENABLED " ) ;
-			isXPertModule = true ;
-		}
 	}
 
 	EndMessage() ;
@@ -504,14 +516,12 @@ void CheckLicenseStatus()
 
 void ClientLogoff()
 {
-	if( GoodResult( EZInterface.ClientLogoff() ) )
+	if ( isConnected )
 	{
-		WriteMessage("\nThanks for using EZClientCpp " ) ;
-		sleep( 10000 ) ;
-		//exit( -1 ) ;
-		return;
+		WriteMessage("\nLogging off\n" ) ;
+		EZInterface.ClientLogoff() ;
+		isConnected = false ; 
 	}
-
 }
 
 //----------------- DeliveriesReading ----------------------//
@@ -529,20 +539,26 @@ void DeliveriesReading()
 	switch ( chosenType )
 	{
 		case 'A': case 'a':
-			//ReadAllDeliveries() ;
+			ReadAllDeliveries( true ) ;
 			break ;
+
+		case 'B': case 'b':
+			ReadAllDeliveries( false ) ;
+			break ;
+
+
 		default:
 			WriteMessage("\n Unknown command!") ;
 	}
 
 }
-/*
-void ReadAllDeliveries()
+
+void ReadAllDeliveries( bool ReadAll )
 {
     int		idx ;
-    long	deliveryCount ;
-    long	deliveryID ;
-    long	hoseID ;
+    LONG	deliveryCount ;
+    LONG	deliveryID ;
+    LONG	hoseID ;
     short	deliveryState ;
     short	deliveryType ;
     double	volume ;
@@ -551,10 +567,10 @@ void ReadAllDeliveries()
     double	value ;
     double	volume2 ;
     DATE	completedDate ;
-    long	lockedBy ;
-    long	reservedBy ;
-    long	attendantID ;
-    long	age ;
+    LONG	lockedBy ;
+    LONG	reservedBy ;
+    LONG	attendantID ;
+    LONG	age ;
     DATE	clearedDate ;
     double	oldVolumeETot ;
     double	oldVolume2ETot ;
@@ -563,24 +579,43 @@ void ReadAllDeliveries()
     double	newVolume2ETot ;
     double	newvalueETot ;
     INT64	tag ;
-    long	duration ;
-    long	clientID ;
+    LONG	duration ;
+    LONG	clientID ;
 	double	peakFlowRate ;
 
-    COleDateTime *oleCompletedDate = NULL ;
-	COleDateTime *oleClearedDate = NULL ;
+    //COleDateTime *oleCompletedDate = NULL ;
+	//COleDateTime *oleClearedDate = NULL ;
 
-    // Read the number of configured products
-    if( !GoodResult( EZInterface.GetDeliveriesCount( &deliveryCount ) ) )
-      return ;
+	if ( ReadAll )
+	{
+		if( !GoodResult( EZInterface.GetAllDeliveriesCount( &deliveryCount ) ) )
+			return ;
+		WriteMessage( "\n [ Count All Deliveries %03d ] ----------------------------------------------- ", deliveryCount ) ;
+	}
+	else 
+	{
+		if( !GoodResult( EZInterface.GetDeliveriesCount( &deliveryCount ) ) )
+			return ;
+		WriteMessage( "\n [ Count pending Deliveries %03d ] ------------------------------------------- ", deliveryCount ) ;
+	}
 
-	WriteMessage( "\n [ Count Deliveries %03d ] --------------------------------------------------- ", deliveryCount ) ;
 
     for( idx = deliveryCount ; idx > 0 ; idx-- )
 	{
 
-       if( !GoodResult( EZInterface.GetDeliveryByOrdinal( idx, &deliveryID ) ) )
-          return;
+		if ( ReadAll )
+		{
+			if( !GoodResult( EZInterface.GetAllDeliveryByOrdinal( idx, &deliveryID ) ) )
+				return;
+		}
+		else 
+		{
+			if( !GoodResult( EZInterface.GetDeliveryByOrdinal( idx, &deliveryID ) ) )
+				return;
+		}
+
+       WriteMessage( "\n------ Delivery: (%03d) %d",    idx, deliveryID ) ;
+
 
        if( GoodResult( EZInterface.GetDeliveryPropertiesEx4(	deliveryID, &hoseID, &deliveryState, &deliveryType,
                                                                 &volume, &priceLevel, &price,
@@ -593,10 +628,9 @@ void ReadAllDeliveries()
 	   {
 
 
-		  oleCompletedDate = new COleDateTime( completedDate ) ;
-		  oleClearedDate = new COleDateTime( clearedDate ) ;
+		  //oleCompletedDate = new COleDateTime( completedDate ) ;
+		  //oleClearedDate = new COleDateTime( clearedDate ) ;
 
-          WriteMessage( "\n------ Delivery: (%03d) %d",    idx, deliveryID ) ;
 
 		  WriteMessage( "\nHose ID: %d  Delivery State: %d  Type: %d",
 										hoseID, deliveryState, deliveryType ) ;
@@ -604,15 +638,15 @@ void ReadAllDeliveries()
 		  WriteMessage( "\nVolume: %.03f  Price Level: %d  Price: %.03f  Value: %.03f",
 										volume, priceLevel, price, value ) ;
 
-		  WriteMessage( "\nVolume2: %.03f  Complete DaTe: %04d-%02d-%02d %02d:%02d:%02d ",
-										volume2, oleCompletedDate->GetYear(), oleCompletedDate->GetMonth(), 
-										oleCompletedDate->GetDay(), oleCompletedDate->GetHour(), oleCompletedDate->GetMinute(), 
-										oleCompletedDate->GetSecond()  ) ;
+		//  WriteMessage( "\nVolume2: %.03f  Complete DaTe: %04d-%02d-%02d %02d:%02d:%02d ",
+		//								volume2, oleCompletedDate->GetYear(), oleCompletedDate->GetMonth(), 
+		//								oleCompletedDate->GetDay(), oleCompletedDate->GetHour(), oleCompletedDate->GetMinute(), 
+		//								oleCompletedDate->GetSecond()  ) ;
 
-		  WriteMessage( "\nAttendant ID: %d  Age: %d  Cleared Date: %04d-%02d-%02d %02d:%02d:%02d ",
-										attendantID, age, oleClearedDate->GetYear(), oleClearedDate->GetMonth(), 
-										oleClearedDate->GetDay(), oleClearedDate->GetHour(), oleClearedDate->GetMinute(), 
-										oleClearedDate->GetSecond() ) ;
+		//  WriteMessage( "\nAttendant ID: %d  Age: %d  Cleared Date: %04d-%02d-%02d %02d:%02d:%02d ",
+		//								attendantID, age, oleClearedDate->GetYear(), oleClearedDate->GetMonth(), 
+		//								oleClearedDate->GetDay(), oleClearedDate->GetHour(), oleClearedDate->GetMinute(), 
+		//								oleClearedDate->GetSecond() ) ;
 
 		  WriteMessage( "\nOld Volume ETotal: %.03f  Old Volume2 ETotal: %.03f  Old Value ETotal: %.03f",
 										oldVolumeETot, oldVolume2ETot, oldvalueETot) ;
@@ -624,7 +658,7 @@ void ReadAllDeliveries()
 
 		  WriteMessage( "\n" ) ;
 
-          if( lockedBy != NOBODY )
+          if( lockedBy != NULL_ID )
 			continue ;
 
           if( GoodResult( EZInterface.LockDelivery( deliveryID ) ) )
@@ -642,7 +676,7 @@ void ReadAllDeliveries()
 	WriteMessage("\n------------------------------------------------------------------------") ;
 
 	EndMessage() ;
-}*/
+}
 
 
 
@@ -653,8 +687,6 @@ void PumpBasicControl()
 	char chosenType ;
 		
 	chosenType = ShowMenu( PUMP_BASIC_CONTROL_MENU ) ;
-
-	isConnected = true; //apagar
 
 	CheckLogin(); 
 	if( ! isConnected )
@@ -690,8 +722,8 @@ void PumpBasicControl()
 
 void TemporaryStop()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want block: ") ;
 	fflush(stdin) ;
@@ -710,8 +742,8 @@ void TemporaryStop()
 
 void ReAuthoriseDelivery()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want reauthorize: ") ;
 	fflush(stdin) ;
@@ -731,8 +763,8 @@ void ReAuthoriseDelivery()
 
 void DisablePump()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want disable: ") ;
 	fflush(stdin) ;
@@ -752,8 +784,8 @@ void DisablePump()
 
 void EnablePump()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want enable: ") ;
 	fflush(stdin) ;
@@ -778,12 +810,12 @@ void PumpsStatus()
 	BSTR    CurrentHose;
 	BSTR    DeliveriesCount;
 #elif defined(__linux__)
-	BSTR    PumpStates[MAX_PATH];
-	BSTR    CurrentHose[MAX_PATH];
-	BSTR    DeliveriesCount[MAX_PATH];
+	TCHAR    PumpStates[MAX_PATH];
+	TCHAR    CurrentHose[MAX_PATH];
+	TCHAR    DeliveriesCount[MAX_PATH];
 #endif
 
-	long    PumpsCount;
+	LONG    PumpsCount;
 	int     Idx;
 	int     CurStatus;
 	int     CurHose;
@@ -803,9 +835,9 @@ void PumpsStatus()
 	  if( !GoodResult( EZInterface.GetAllPumpStatuses( &PumpStates, &CurrentHose, &DeliveriesCount ) ) )
 #elif defined(__linux__)
 	  if( !GoodResult( EZInterface.GetAllPumpStatuses(
-										  MakeBSTR(PumpStates,      sizeof(PumpStates)/sizeof(wchar_t)),
-										  MakeBSTR(CurrentHose,     sizeof(CurrentHose)/sizeof(wchar_t)),
-										  MakeBSTR(DeliveriesCount, sizeof(DeliveriesCount)/sizeof(wchar_t)) ) ) )
+										  MakeBSTR(PumpStates,      MAX_PATH),
+										  MakeBSTR(CurrentHose,     MAX_PATH),
+										  MakeBSTR(DeliveriesCount, MAX_PATH) ) ) )
 #endif
 		  return;
 
@@ -851,8 +883,8 @@ void PumpsStatus()
 
 void AuthoriseDelivery()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want Authorise: ") ;
 	fflush(stdin) ;
@@ -872,8 +904,8 @@ void AuthoriseDelivery()
 
 void CancelAuthorise()
 {
-	long	pumpID ;
-	long	pumpNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
 	
 	WriteMessage("\n Enter the number of the pump you want Cancel Authorise: ") ;
 	fflush(stdin) ;
@@ -915,35 +947,36 @@ void PumpControlExtended()
 	}
 }
 
+#if 0 
 
 void ScheduledDelivery()
 {
-    long	pumpID ;
-	long	pumpNumber ;
-    long	termID = LOGIN_ID ;
-    long	attendantID ;
-	INT64	attendantTag ;
-	long	cardClientID = NULL ;
-	INT64	cardClientTag = NOBODY ;
-	short	authType = NOBODY;
-	INT64	extTag = NOBODY ;
+    LONG	pumpID = NULL_ID ;
+	LONG	pumpNumber = 0 ;
+    LONG	termID = LOGIN_ID ;
+    LONG	attendantID = NULL_ID ;
+	INT64	attendantTag = -1 ;
+	LONG	cardClientID = NULL_ID ;
+	INT64	cardClientTag = -1 ;
+	short	authType = 0;
+	INT64	extTag = -1 ;
 	short	priceLevel = UNKNOWN_PRICE_CONTROL;
-	double	price ;
-	//short	gradeType = ALLGRADE ;
+	double	price = 0 ;
+	short	gradeType = ALLGRADE ;
 	short	priceType = FIXED_PRICE_TYPE ;
 	short	presetType = DOLLAR_LIMIT_TYPE ;
-	double	value ;
+	double	value = 0 ;
 	short	hose = ALL_HOSES ;
-	double	odometer = NULL ;
-	double	odometer2 = NULL ;
+	double	odometer = 0 ;
+	double	odometer2 = 0 ;
 
 	// GetAttendantProperties
-	long	attendantNumber ;
-	short	shiftAStart ;
-	short	shiftAEnd ;
-	short	shiftBStart ;
-	short	shiftBEnd ;
-	short	attendantType ;
+	LONG	attendantNumber = 0 ;
+	short	shiftAStart = 0 ;
+	short	shiftAEnd  = 0 ;
+	short	shiftBStart  = 0 ;
+	short	shiftBEnd  = 0 ;
+	short	attendantType  = 0 ;
 
 #if defined( _WIN32 )
 	BSTR    termHash = NULL ;
@@ -957,19 +990,21 @@ void ScheduledDelivery()
 	BSTR	shortName = NULL ;
 	BSTR	password = NULL ;
 	BSTR	tag = NULL ;
-	[MAX_PATH]
+
+
 #elif defined(__linux__)
-	BSTR    termHash[MAX_PATH];
-	BSTR    plate[MAX_PATH];
-	BSTR    extTransactionID[MAX_PATH];
-	BSTR	driverID[MAX_PATH];
-	BSTR	authorisation[MAX_PATH];
+	TCHAR    termHash[MAX_PATH];
+	TCHAR    plate[MAX_PATH];
+	TCHAR    extTransactionID[MAX_PATH];
+	TCHAR	driverID[MAX_PATH];
+	TCHAR	authorisation[MAX_PATH];
 
 	// GetAttendantProperties
-	BSTR	name[MAX_PATH];
-	BSTR	shortName[MAX_PATH];
-	BSTR	password[MAX_PATH];
-	BSTR	tag[MAX_PATH];
+	TCHAR	name[MAX_PATH];
+	TCHAR	shortName[MAX_PATH];
+	TCHAR	password[MAX_PATH];
+	TCHAR	tag[MAX_PATH];
+
 #endif
 
 	WriteMessage( "\n In this example we will make an authorization with a choice of pump, attendant, price and limit." ) ;
@@ -1038,14 +1073,14 @@ void ScheduledDelivery()
 }
 
 
-
+#endif 
 
 void PresetDelivery()
 {
     int    Bomba;
     int    Bico;
-    long   IdBomba;
-    long   IdBico;
+    LONG   IdBomba;
+    LONG   IdBico;
     short  LType;
     double PsValue;
 
@@ -1107,12 +1142,12 @@ void PumpPriceControl()
 
 void ChangeHosePrice()
 {
-	long	hoseID ;
-	long	hoseNumber ;
-	long	pumpID ;
-	long	pumpNumber ;
-	long	durationType ;
-	long	priceType ;
+	LONG	hoseID ;
+	LONG	hoseNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
+	LONG	durationType ;
+	LONG	priceType ;
 	double	price1 ;
 	double	price2 ;
 
@@ -1139,7 +1174,7 @@ void ChangeHosePrice()
 
 	WriteMessage( "\n 1 - FIXED PRICE TYPE " ) ;
 	WriteMessage( "\n 2 - DISCOUNT PRICE TYPE " ) ;
-	WriteMessage( "\n 3 - SURCHARGE PRICE TYPE " ) ;
+	WriteMessage( "\n 3 - SURTCHARGE PRICE TYPE " ) ;
 	WriteMessage( "\n" ) ;
 	WriteMessage( "\n Enter the price type: " ) ;
     fflush( stdin ) ;
@@ -1163,9 +1198,9 @@ void ChangeHosePrice()
 
 void ChangeGradePrice()
 {
-	long	gradeID ; 
-	long	gradeNumber ;
-	long	level ;
+	LONG	gradeID ; 
+	LONG	gradeNumber ;
+	LONG	level ;
 	double	price ;
 
 	WriteMessage( "\n Enter the Grade Number you want to change the price: " ) ;
@@ -1197,13 +1232,13 @@ void ChangeGradePrice()
 /*
 void ReadingCards()
 {
-	long	idx ;
-	long	cardCount ;
-	long	cardID ;
-	long	cardNumber ;
-	long	pumpID ;
+	LONG	idx ;
+	LONG	cardCount ;
+	LONG	cardID ;
+	LONG	cardNumber ;
+	LONG	pumpID ;
 	short	cardType ;
-	long	parentID ;
+	LONG	parentID ;
 	INT64	tag ;
 	DATE	timeStamp ;
 
@@ -1235,7 +1270,7 @@ void ReadingCards()
 
 		WriteMessage( "\n------ Card: (%03d) %d",    idx, cardID ) ;
 
-		WriteMessage( "\nCard Number: %d  Card Name: %S  Pump ID: %d",
+		WriteMessage( "\nCard Number: %d  Card Name: %s  Pump ID: %d",
 							cardNumber, cardName, pumpID ) ;
 
 		WriteMessage( "\nCard Type: %d  Parent ID: %d Time Stamp: %04d-%02d-%02d %02d:%02d:%02d  TAG: %ull",
@@ -1282,20 +1317,20 @@ void RegisterAttendant()
 
 void AttendantRegistration()
 {
-	long	idx ;
-	long	attendantCount ;
-	long	attendantID ;
-	long	newAttendantID = 0 ;
-	long	attendantNumber ;	
+	LONG	idx ;
+	LONG	attendantCount ;
+	LONG	attendantID ;
+	LONG	newAttendantID = 0 ;
+	LONG	attendantNumber ;	
 	short	shiftAStart ;
 	short	shiftAEnd ;
 	short	shiftBStart ;
 	short	shiftBEnd ;
 	short	attendantType = ENABLED_ATTSTATE ;
-	char	attendantName[MAX_PATH] ;
-	char	attendantShortName[MAX_PATH] ;
-	char	password[MAX_PATH] ;
-	char	tag[MAX_PATH] ;
+	TCHAR	attendantName[MAX_PATH] ;
+	TCHAR	attendantShortName[MAX_PATH] ;
+	TCHAR	password[MAX_PATH] ;
+	TCHAR	tag[MAX_PATH] ;
 
 	WriteMessage( "\n Enter the attendant number: " ) ;
     fflush( stdin ) ;
@@ -1349,13 +1384,13 @@ void AttendantRegistration()
 
 	newAttendantID++ ;
 
-	BSTR AttName = (BSTR)charToWChar( attendantName ) ; 
-	BSTR AttShortName = (BSTR)charToWChar( attendantShortName ) ; 
-	BSTR AttPassword = (BSTR)charToWChar( password ) ; 
-	BSTR AttTag = (BSTR)charToWChar( tag ) ; 
+	// BSTR AttName = (BSTR)charToWChar( attendantName ) ; 
+	// BSTR AttShortName = (BSTR)charToWChar( attendantShortName ) ; 
+	// BSTR AttPassword = (BSTR)charToWChar( password ) ; 
+	// BSTR AttTag = (BSTR)charToWChar( tag ) ; 
 
-	if( !GoodResult( EZInterface.SetAttendantPropertiesEx(	newAttendantID, attendantNumber, AttName,
-															AttShortName, AttPassword, AttTag,
+	if( !GoodResult( EZInterface.SetAttendantPropertiesEx(	newAttendantID, attendantNumber, attendantName,
+															attendantShortName, password, tag,
 															( short ) shiftAStart, ( short ) shiftAEnd, ( short ) shiftBStart,
 															( short ) shiftBEnd, attendantType ) ) )
 		return ;
@@ -1372,8 +1407,8 @@ void AttendantRegistration()
 
 void DeleteAttendant()
 {
-	long attendantNumber ;
-	long attendantID ;
+	LONG attendantNumber ;
+	LONG attendantID ;
 
 	WriteMessage( "\n Enter the Attdendant Number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -1393,17 +1428,19 @@ void DeleteAttendant()
 void ChangeAttendantTime()
 {
 	 //GetAttendantProperties
-	long	attendantNumber;
-	long	attendantID;
+	LONG	attendantNumber;
+	LONG	attendantID;
 	short	shiftAStart;
 	short	shiftAEnd;
 	short	shiftBStart;
 	short	shiftBEnd;
 	short	attendantType;
-	BSTR	attedantName = NULL;
-	BSTR	attendantShortName = NULL;
-	BSTR	attendantPassword = NULL;
-	BSTR	attedantTag = NULL;
+	TCHAR	attedantName[ MAX_PATH ];
+	TCHAR	attendantShortName[ MAX_PATH ];
+	TCHAR	attendantPassword[ MAX_PATH ];
+	TCHAR	attedantTag[ MAX_PATH ];
+	
+
 	
 
 	WriteMessage( "\n Enter the Attendant Number you want change: " ) ;
@@ -1413,8 +1450,8 @@ void ChangeAttendantTime()
 	if (!GoodResult(EZInterface.GetAttendantByNumber(attendantNumber, &attendantID)))
 		return;	
 
-	if (!GoodResult(EZInterface.GetAttendantPropertiesEx(attendantID, &attendantNumber, &attedantName,
-		&attendantShortName, &attendantPassword, &attedantTag,
+	if (!GoodResult(EZInterface.GetAttendantPropertiesEx(attendantID, &attendantNumber, MakeBSTR(attedantName, MAX_PATH ),
+		MakeBSTR(attendantShortName, MAX_PATH ) , MakeBSTR(attendantPassword, MAX_PATH ), MakeBSTR(attedantTag, MAX_PATH ) ,
 		&shiftAStart, &shiftAEnd, &shiftBStart,
 		&shiftBEnd, &attendantType)))
 		return;
@@ -1488,21 +1525,21 @@ void ClientRegistration()
 	st.wYear = st.wYear + 1000 ;
 	COleDateTime eztime( st ) ;
 
-	long	idx ;
-	long	clientCount ;
-	long	clientID ;
-	long	newClientID = 0 ;
-	long	clientNumber ;
+	LONG	idx ;
+	LONG	clientCount ;
+	LONG	clientID ;
+	LONG	newClientID = 0 ;
+	LONG	clientNumber ;
 	char	clientName[MAX_PATH] ;
 	char	tag[MAX_PATH] ;
 	short	isEnable = true ;
-	long	priceLevel ;
+	LONG	priceLevel ;
 	short	gradeType = ALLGRADE ;
 	short	cardType = ATTENDANT_CARD_TYPE ;
 	short	limitType = DOLLAR_PRESET_TYPE ;
 	double	limit ;
 	short	entryType = NO_ENTRY_TYPE ;
-	long	parentID = -1 ;
+	LONG	parentID = -1 ;
 
 #if defined( _WIN32 )
 	BSTR	plate = NULL ;
@@ -1565,8 +1602,8 @@ void ClientRegistration()
 
 void DeleteClient()
 {
-	long	clientNumber ;
-	long	clientID ;
+	LONG	clientNumber ;
+	LONG	clientID ;
 
 	WriteMessage( "\n Enter the Client Number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -1611,11 +1648,11 @@ void TanksSensorsReading()
 
 void TankReading()
 {
-    long   Idx;
-    long   Ct;
-    long   Id;
-    long   Number;
-    long   GradeID;
+    LONG   Idx;
+    LONG   Ct;
+    LONG   Id;
+    LONG   Number;
+    LONG   GradeID;
     short  TType;
     double Capacity;
     double Diameter;
@@ -1627,13 +1664,13 @@ void TankReading()
     double GaugeLevel;
     double GaugeWaterVolume;
     double GaugeWaterLevel;
-    long   GaugeID;
+    LONG   GaugeID;
     short  ProbeNo;
 
 #if defined(_WIN32)
     BSTR   Name;
 #elif defined(__linux__)
-    BSTR   Name[MAX_PATH];
+    TCHAR   Name[MAX_PATH];
 #endif
 
     // Verifica conexao
@@ -1662,7 +1699,7 @@ void TankReading()
                                                          &GaugeID, &ProbeNo ) ) )
 #elif defined(__linux__)
 	   if( GoodResult( EZInterface.GetTankProperties(Id, &Number,
-														 MakeBSTR(Name, sizeof(Name)/sizeof(wchar_t)),
+														 MakeBSTR(Name, MAX_PATH ),
 														 &GradeID,
 														 &TType, &Capacity, &Diameter,
 														 &TheoVolume, &GaugeVolume,
@@ -1674,7 +1711,7 @@ void TankReading()
 
 
 	   {
-          WriteMessage("\n  Tanque: %02ld  Nome: %S  Produto: %02ld  Tipo: %02d",
+          WriteMessage("\n  Tanque: %02ld  Nome: %s  Produto: %02ld  Tipo: %02d",
 								Number, Name, GradeID, TType);
 
           WriteMessage("\n     Capacidade: %.02f  Diametro: %.02f",
@@ -1697,11 +1734,11 @@ void TankReading()
 
 void MonitoringSensor()
 {
-	long	idx ;
-	long	sensorCount ;
-	long	sensorID ;
-	long	sensorNumber ;
-	long	portID ;
+	LONG	idx ;
+	LONG	sensorCount ;
+	LONG	sensorID ;
+	LONG	sensorNumber ;
+	LONG	portID ;
 	short	sensorType ;
 	short	sensorAddress ;
 	short	sensorNo ;
@@ -1709,7 +1746,7 @@ void MonitoringSensor()
 #if defined(_WIN32)
 	BSTR	sensorName ;
 #elif defined(__linux__)
-	BSTR    sensorName[MAX_PATH];
+	TCHAR    sensorName[MAX_PATH];
 #endif
 
 	if( !GoodResult( EZInterface.GetSensorsCount( &sensorCount ) ) )
@@ -1728,12 +1765,12 @@ void MonitoringSensor()
 																&portID,			&sensorType,		&sensorAddress,			
 																&sensorNo		) ) )
 #elif defined(__linux__)
-		if( GoodResult( EZInterface.GetSensorProperties(		sensorID,			&sensorNumber,		MakeBSTR(sensorName, sizeof(sensorName)/sizeof(wchar_t)),
+		if( GoodResult( EZInterface.GetSensorProperties(		sensorID,			&sensorNumber,		MakeBSTR(sensorName, MAX_PATH ),
 																&portID,			&sensorType,		&sensorAddress,			
 																&sensorNo		) ) )	
 #endif
 
-		WriteMessage("\n\n\t SensorID: %d   SensorNumber: %d  SensorName: %S ",
+		WriteMessage("\n\n\t SensorID: %d   SensorNumber: %d  SensorName: %s ",
 											sensorID, sensorNumber, sensorName );
 		WriteMessage("\n\t PortID: %d  SensorType: %d  SensorAddress: %d   ",
 											portID, sensorType, sensorAddress );
@@ -1797,31 +1834,31 @@ void GeneralConfigurationFacility()
 
 void DeliveryPositionRegister()
 {
-	long	idx ;
-	long	pumpCount ;
-	long	pumpID ;
-	long	newPumpID = 0 ;
-	long	pumpNumber ;
-	long	pumpPhysicalNumber ;
-	long	pumpSide ;
-	long	pumpAddress ;
-	long	priceLevel1 ;
-	long	priceLevel2 ;
+	LONG	idx ;
+	LONG	pumpCount ;
+	LONG	pumpID = NULL_ID ;
+	LONG	newPumpID = NULL_ID ;
+	LONG	pumpNumber ;
+	LONG	pumpPhysicalNumber ;
+	LONG	pumpSide ;
+	LONG	pumpAddress ;
+	LONG	priceLevel1 ;
+	LONG	priceLevel2 ;
 	short	priceDspFormat = PUMP_DISPLAY_4_2 ;
 	short	volumeDspFormat = PUMP_DISPLAY_6_2 ;
 	short	valueDspFormat = PUMP_DISPLAY_6_2 ;
 	short	pumpType = 0x04 ;					//EZSim, Details, see PumpType of Pumps at EZDrive.ini			        
-	long	portID = 0x01 ;
-	long	attendantID = NOBODY ;
+	LONG	portID = 0x01 ;
+	LONG	attendantID = NULL_ID ;
 	short	authMode = AUTO_AUTH ;
 	short	stackMode = STACK_AUTO ;
-	short	prepayAllowed = NULL ;
-	short	preauthAllowed = NULL ;
-	long	slotZigBeeID ;
-	long	muxSlotZigBeeID = NOBODY ;
+	short	prepayAllowed = 0 ;
+	short	preauthAllowed = 0 ;
+	LONG	slotZigBeeID = NULL_ID ;
+	LONG	muxSlotZigBeeID = NULL_ID ;
 	short	priceControl = REMOTE_PRICE_CONTROL ;
 	short	hasPreset = 0x01 ;
-	char	pumpName[MAX_PATH] ;
+	TCHAR	pumpName[MAX_PATH] ;
 
 	WriteMessage( "\n Enter the PumpNumber: " ) ;
     fflush( stdin ) ;
@@ -1831,7 +1868,7 @@ void DeliveryPositionRegister()
     fflush( stdin ) ;
     scanf ("%s", pumpName ) ;
 
-	BSTR AttPumpName =	(BSTR)charToWChar( pumpName ) ;  
+	//BSTR AttPumpName =	(BSTR)charToWChar( pumpName ) ;  
 
 	WriteMessage( "\n Enter the PhysicalNumber: " ) ;
     fflush( stdin ) ;
@@ -1871,7 +1908,7 @@ void DeliveryPositionRegister()
 
 	newPumpID++ ;
 
-	if( !GoodResult( EZInterface.SetPumpPropertiesEx(		newPumpID, pumpNumber, AttPumpName, ( short ) pumpPhysicalNumber,
+	if( !GoodResult( EZInterface.SetPumpPropertiesEx(		newPumpID, pumpNumber, pumpName, ( short ) pumpPhysicalNumber,
 															( short ) pumpSide, ( short ) pumpAddress, ( short ) priceLevel1, 
 															( short ) priceLevel2, ( short ) priceDspFormat, ( short ) volumeDspFormat,
 															( short ) valueDspFormat, pumpType, portID, attendantID,
@@ -1889,8 +1926,8 @@ void DeliveryPositionRegister()
 
 void DeleteDeliveryPosition()
 {
-	long	pumpNumber ;
-	long	pumpID ;
+	LONG	pumpNumber ;
+	LONG	pumpID ;
 
 	WriteMessage( "\n Enter the Position Number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -1910,16 +1947,16 @@ void DeleteDeliveryPosition()
 
 void HoseRegistration()
 {
-	long	idx ;
-	long	hoseCount ;
-	long	hoseID ;
-	long	newHoseID = 0 ;
-	long	hoseNumber ;
-	long	pumpID ;
-	long	pumpNumber ;
-	long	tankID ;
-	long	tankNumber ;
-	long	hosePhysicalNumber ;
+	LONG	idx ;
+	LONG	hoseCount ;
+	LONG	hoseID ;
+	LONG	newHoseID = 0 ;
+	LONG	hoseNumber ;
+	LONG	pumpID ;
+	LONG	pumpNumber ;
+	LONG	tankID ;
+	LONG	tankNumber ;
+	LONG	hosePhysicalNumber ;
 	double	mtrTheoValue = 0 ;
 	double	mtrTheoVolume = 0 ;
 	double	mtrElecValue = 0 ;
@@ -1978,10 +2015,10 @@ void HoseRegistration()
 
 void DeleteHose()
 {
-	long	hoseNumber ;
-	long	pumpNumber ;
-	long	hoseID ;
-	long	pumpID ;
+	LONG	hoseNumber ;
+	LONG	pumpNumber ;
+	LONG	hoseID ;
+	LONG	pumpID ;
 
 	WriteMessage( "\n Enter the Pump Number related to the hose: " ) ;
 	fflush( stdin ) ;
@@ -2008,14 +2045,14 @@ void DeleteHose()
 
 void GradeRegister()
 {
-	long	idx ;
-	long	gradeCount ;
-	long	gradeID ;
-	long	newGradeID = 0 ;
-	long	gradeNumber ;
-	char	gradeName[MAX_PATH] ;
-	char	gradeShortName[MAX_PATH] ;
-	char	gradeCode[MAX_PATH] ;
+	LONG	idx ;
+	LONG	gradeCount ;
+	LONG	gradeID ;
+	LONG	newGradeID = 0 ;
+	LONG	gradeNumber ;
+	TCHAR	gradeName[MAX_PATH] ;
+	TCHAR	gradeShortName[MAX_PATH] ;
+	TCHAR	gradeCode[MAX_PATH] ;
 	short	gradeType = 0x00 ;					//Other, Details, see GradeType at EZATG.ini file		
 
 	WriteMessage( "\n Enter the Grade Number: " ) ;
@@ -2042,10 +2079,7 @@ void GradeRegister()
 
 	#elif(__linux__)
 
-	BSTR	AttGradeName[MAX_PATH];
-	BSTR	AttGradeShortName[MAX_PATH];
-	BSTR	AttGradeCode[MAX_PATH];
-
+	
 	#endif
 
 
@@ -2063,8 +2097,8 @@ void GradeRegister()
 
 	newGradeID++ ;
 
-	if( !GoodResult( EZInterface.SetGradePropertiesEx(		newGradeID , gradeNumber, AttGradeName , 
-															AttGradeShortName , AttGradeCode  , gradeType ) ) )
+	if( !GoodResult( EZInterface.SetGradePropertiesEx(		newGradeID , gradeNumber, gradeName , 
+															gradeShortName , gradeCode  , gradeType ) ) )
 		return ;
 
 
@@ -2080,8 +2114,8 @@ void GradeRegister()
 
 void DeleteGrade()
 {
-	long	gradeNumber ;
-	long	gradeID ;
+	LONG	gradeNumber ;
+	LONG	gradeID ;
 
 	WriteMessage( "\n Enter the grade number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -2101,14 +2135,14 @@ void DeleteGrade()
 
 void TankRegistration()
 {
-	long	idx ;
-	long	tankCount ;
-	long	tankID ;
-	long	newTankID = 0 ;
-	long	tankNumber ;
+	LONG	idx ;
+	LONG	tankCount ;
+	LONG	tankID ;
+	LONG	newTankID = 0 ;
+	LONG	tankNumber ;
 	char	tankName[MAX_PATH] ;
-	long	gradeID ;
-	long	gradeNumber ;
+	LONG	gradeID ;
+	LONG	gradeNumber ;
 	short	tankType = GAUGED_TANK_TYPE ;
 	double  capacity ;
 	double	diameter ; 					  
@@ -2120,9 +2154,9 @@ void TankRegistration()
 	double  gaugeLevel = 0 ;
 	double  gaugeWaterVolume = 0 ;
 	double  gaugeWaterLevel = 0 ;
-	long	gaugeID = 5 ;
-	long	probeNo ; 
-	long	gaugeAlarmsMask = TANK_RESPONDING_BIT ;
+	LONG	gaugeID = 5 ;
+	LONG	probeNo ; 
+	LONG	gaugeAlarmsMask = TANK_RESPONDING_BIT ;
 
 	WriteMessage( "\n Enter the Tank Number: " ) ;
     fflush( stdin ) ;
@@ -2148,7 +2182,7 @@ void TankRegistration()
     fflush( stdin ) ;
     scanf ("%d", &probeNo ) ;
 
-	BSTR	AttTankName =	(BSTR)charToWChar( tankName ) ;
+	// BSTR	AttTankName =	(BSTR)charToWChar( tankName ) ;
 
 	if( !GoodResult( EZInterface.GetTanksCount( &tankCount ) ) )
 		return ;
@@ -2167,7 +2201,7 @@ void TankRegistration()
 	if( !GoodResult( EZInterface.GetGradeByNumber( gradeNumber, &gradeID ) ) )
 		return ;
 
-	if( !GoodResult( EZInterface.SetTankPropertiesEx(		newTankID , tankNumber, AttTankName, 
+	if( !GoodResult( EZInterface.SetTankPropertiesEx(		newTankID , tankNumber, tankName, 
 															gradeID , tankType , capacity , diameter , 
 															theoVolume , gaugeVolume , gaugeTCVolume, 
 															gaugeUllage, gaugeTemperature , gaugeLevel ,
@@ -2184,8 +2218,8 @@ void TankRegistration()
 
 void DeleteTank()
 {
-	long	tankNumber ;
-	long	tankID ;
+	LONG	tankNumber ;
+	LONG	tankID ;
 
 	WriteMessage( "\n Enter the Tank number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -2205,16 +2239,16 @@ void DeleteTank()
 
 void ZigbeeDeviceRegistration() 
 {
-	long	idx ;
-	long	ZBCount ;
-	long	ZBID ; 
-	long	newZBID = 0 ;
-	long	ZBNumber ;
+	LONG	idx ;
+	LONG	ZBCount ;
+	LONG	ZBID ; 
+	LONG	newZBID = 0 ;
+	LONG	ZBNumber ;
 	char	ZBName[ MAX_PATH ] ;
-	long	deviceType ;
+	LONG	deviceType ;
 	char	serialNumber[ MAX_PATH ] ;
 	BSTR	nodeIdentifier = NULL ;
-	long	portID = USB1 ;
+	LONG	portID = USB1 ;
 
 	WriteMessage( "\n Enter the ZigBee Device Number: " ) ;
     fflush( stdin ) ;
@@ -2234,8 +2268,8 @@ void ZigbeeDeviceRegistration()
     fflush( stdin ) ;
     scanf ("%s", serialNumber ) ;
 
-	BSTR	AttZBName =	(BSTR)charToWChar( ZBName ) ;
-	BSTR	AttSerialNumber = (BSTR)charToWChar( serialNumber ) ;
+	//BSTR	AttZBName =	(BSTR)charToWChar( ZBName ) ;
+	//BSTR	AttSerialNumber = (BSTR)charToWChar( serialNumber ) ;
 
 	if( !GoodResult( EZInterface.GetZigBeeCount( &ZBCount ) ) )
 		return ;
@@ -2251,8 +2285,8 @@ void ZigbeeDeviceRegistration()
 
 	newZBID++ ;
 
-	if( !GoodResult( EZInterface.SetZigBeeProperties(		newZBID , ZBNumber , AttZBName , ( short ) deviceType ,
-															AttSerialNumber , nodeIdentifier , portID ) ) )
+	if( !GoodResult( EZInterface.SetZigBeeProperties(		newZBID , ZBNumber , ZBName , ( short ) deviceType ,
+															serialNumber , nodeIdentifier , portID ) ) )
 		return ;
 
 	//FREE_SYS_STR( AttSerialNumber ) ;
@@ -2266,8 +2300,8 @@ void ZigbeeDeviceRegistration()
 
 void DeleteZigbeeDevice()
 {
-	long	ZBNumber ;
-	long	ZBID ;
+	LONG	ZBNumber ;
+	LONG	ZBID ;
 
 	WriteMessage( "\n Enter the Zigbee Device number you wish to delete: " ) ;
 	fflush( stdin ) ;
@@ -2291,7 +2325,7 @@ void DeleteZigbeeDevice()
 
 /*BSTR CharToBstr(  const char* text )
 {
-    size_t size = strlen( text ) + 1;
+    size_t size = STRLEN( text ) + 1;
 	BSTR res =  SysAllocStringByteLen( NULL , size * sizeof( wchar_t ) ) ;
     mbstowcs( res , text , size );
 	return res ;
@@ -2354,7 +2388,7 @@ void HelpText(int level)
 //
 void CompanyID(short HoseNumber, short PumpNumber, char *cid)
 {
-	long Offset;
+	LONG Offset;
 
 	switch(HoseNumber)
 	{
@@ -2371,18 +2405,18 @@ void CompanyID(short HoseNumber, short PumpNumber, char *cid)
 
 //-----------------------------------------------------------------------------
 // Converte char array para Wide-Char
-static wchar_t* charToWChar(const char* text)
-{
-    size_t size = strlen(text) + 1;
-	wchar_t* wa = new wchar_t[size];
-
-    mbstowcs(wa,text,size);
-
-    return wa;
-}
+//static wchar_t* charToWChar(const char* text)
+//{
+//    size_t size = STRLEN(text) + 1;
+//	wchar_t* wa = new wchar_t[size];
+//
+//    mbstowcs(wa,text,size);
+//
+//    return wa;
+//}
 
 //-----------------------------------------------------------------------------
-PBSTR MakeBSTR( wchar_t* pStr , int Len )
+PBSTR MakeBSTR( TCHAR* pStr , int Len )
 {
 	for ( int i = 0 ; i+1 < Len ; pStr[i++] = ' ' ) ;
 	pStr[ Len - 1 ] = 0 ;
@@ -2394,20 +2428,20 @@ PBSTR MakeBSTR( wchar_t* pStr , int Len )
 void CheckLogin()
 {
 
-	if( !GoodResult( EZInterface.TestConnection() ) )
+	if( ! isConnected || ! GoodResult( EZInterface.TestConnection() ) )
 	{
 
-		if( GoodResult( EZInterface.ClientLogonEx(15,
-												  (runEvents?7:1),
-												 (BSTR)charToWChar(EZServerAddr),
-												  5123, 5124, 10000, 0, 0, 0) ) )
+		if( GoodResult( EZInterface.ClientLogonEx( 15,
+												   (runEvents?7:1),
+												   EZServerAddr ,
+												   5123, 5124, 10000, 0, 0, 0) ) )
 		{
-			WriteMessage("\nConectado: %s", EZServerAddr);
+			WriteMessage("Conectado: %s\n", EZServerAddr);
 			isConnected = true;
 		}
 		else
 		{
-			WriteMessage("\nERRO conectando: %s", EZServerAddr);
+			WriteMessage("ERRO conectando: %s\n", EZServerAddr);
 			isConnected = false;
 		}
 	}
@@ -2420,7 +2454,7 @@ void CheckLogin()
 void PumpAuthorizeCancel()
 {
 	int  Bomba;
-	long IdBomba;
+	LONG IdBomba;
 
 	Bomba = appPump;   // Le o numero da bomba no combo
 
@@ -2479,23 +2513,23 @@ void ChangePrice()
 {
     int    Bomba;
     int    Bico;
-    long   IdBico;
+    LONG   IdBico;
     short  Duracao;
     short  Tipo;
     double Valor1;
     double Valor2;
 
     int    Index;
-    long   Bicos;
+    LONG   Bicos;
 
-    long   HNumber;
-    long   PhysicalNumber;
-    long   PumpID;
-    long   PumpNumber;
-    long   TankID;
-    long   TankNumber;
-    long   GradeID;
-    long   GradeNumber;
+    LONG   HNumber;
+    LONG   PhysicalNumber;
+    LONG   PumpID;
+    LONG   PumpNumber;
+    LONG   TankID;
+    LONG   TankNumber;
+    LONG   GradeID;
+    LONG   GradeNumber;
     double MtrTheoValue;
     double MtrTheoVolume;
     double trElecValue;
@@ -2511,11 +2545,11 @@ void ChangePrice()
     BSTR   GradeShortName;
     BSTR   GradeCode;
 #elif defined(__linux__)
-    BSTR   PumpName[MAX_PATH];
-    BSTR   TankName[MAX_PATH];
-    BSTR   GradeName[MAX_PATH];
-    BSTR   GradeShortName[MAX_PATH];
-    BSTR   GradeCode[MAX_PATH];
+    TCHAR   PumpName[MAX_PATH];
+    TCHAR   TankName[MAX_PATH];
+    TCHAR   GradeName[MAX_PATH];
+    TCHAR   GradeShortName[MAX_PATH];
+    TCHAR   GradeCode[MAX_PATH];
 #endif
 
     Duracao      = MULTIPLE_DURATION_TYPE; // Duracao do preco (Multipos abastecimentos)
@@ -2560,13 +2594,13 @@ void ChangePrice()
 		// Pega os dados do bico
 		if( GoodResult( EZInterface.GetHoseSummaryEx(IdBico, &HNumber,        &PhysicalNumber,
 															 &PumpID,         &PumpNumber,
-															 MakeBSTR(PumpName, sizeof(PumpName)/sizeof(wchar_t)),
+															 MakeBSTR(PumpName, MAX_PATH),
 															 &TankID,         &TankNumber,
-															 MakeBSTR(TankName, sizeof(TankName)/sizeof(wchar_t)),
+															 MakeBSTR(TankName, MAX_PATH),
 															 &GradeID,        &GradeNumber,
-															 MakeBSTR(GradeName, sizeof(GradeName)/sizeof(wchar_t)),
-															 MakeBSTR(GradeShortName, sizeof(GradeShortName)/sizeof(wchar_t)),
-															 MakeBSTR(GradeCode, sizeof(GradeCode)/sizeof(wchar_t)),
+															 MakeBSTR(GradeName, MAX_PATH),
+															 MakeBSTR(GradeShortName, MAX_PATH),
+															 MakeBSTR(GradeCode, MAX_PATH),
 															 &MtrTheoValue,   &MtrTheoVolume,
 															 &trElecValue,    &MtrElecVolume, &Price1,
 															 &Price2,         &HEnabled) ) )
@@ -2598,8 +2632,8 @@ void PumpPreset()
 {
     int    Bomba;
     int    Bico;
-    long   IdBomba;
-    long   IdBico;
+    LONG   IdBomba;
+    LONG   IdBico;
     short  LType;
     double PsValue;
 
@@ -2641,16 +2675,16 @@ void PumpPreset()
 //----------------------------------------------------------------------------//
 void ReadTotals()
 {
-    long   IdBomba;
-    long   IdBico;
+    LONG   IdBomba;
+    LONG   IdBico;
 
-    long   Bomba;
-    long   Bico;
+    LONG   Bomba;
+    LONG   Bico;
 
-    long   Number;
-    long   PumpID;
-    long   TankID;
-    long   PhysicalNumber;
+    LONG   Number;
+    LONG   PumpID;
+    LONG   TankID;
+    LONG   PhysicalNumber;
     double MtrTheoValue;
     double MtrTheoVolume;
     double MtrElecValue;
@@ -2704,19 +2738,19 @@ void ReadTotals()
 // Lista configuracao de produtos
 void ListGrades()
 {
-    long Idx;
-    long Ct;
-    long Id;
-    long Number;
+    LONG Idx;
+    LONG Ct;
+    LONG Id;
+    LONG Number;
 
 #if defined(_WIN32)
     BSTR Name;
     BSTR ShortName;
     BSTR Code;
 #elif defined(__linux__)
-    BSTR Name[MAX_PATH];
-    BSTR ShortName[MAX_PATH];
-    BSTR Code[MAX_PATH];
+    TCHAR Name[MAX_PATH];
+    TCHAR ShortName[MAX_PATH];
+    TCHAR Code[MAX_PATH];
 #endif
 
     // Verifica conexao
@@ -2740,11 +2774,11 @@ void ListGrades()
        if( GoodResult( EZInterface.GetGradeProperties(Id, &Number, &Name, &ShortName, &Code) ) )
 #elif defined(__linux__)
        if( GoodResult( EZInterface.GetGradeProperties(Id, &Number,
-    		                                          MakeBSTR(Name,      sizeof(Name)/sizeof(wchar_t)),
-    		                                          MakeBSTR(ShortName, sizeof(ShortName)/sizeof(wchar_t)),
-    		                                          MakeBSTR(Code,      sizeof(Code)/sizeof(wchar_t)) )))
+    		                                          MakeBSTR(Name,      MAX_PATH),
+    		                                          MakeBSTR(ShortName, MAX_PATH),
+    		                                          MakeBSTR(Code,      MAX_PATH) )))
 #endif
-          WriteMessage( "\n  Grade: %ld  Nome: %S  Abreviado: %S  Codigo: %S",
+          WriteMessage( "\n  Grade: %ld  Nome: %s  Abreviado: %s  Codigo: %s",
 							Number, Name, ShortName, Code);
 	}
 
@@ -2756,10 +2790,10 @@ void ListGrades()
 //----------------------------------------------------------------------------
 void ListPumps()
 {
-    long  Idx;
-    long  Ct;
-    long  Id;
-    long  Number;
+    LONG  Idx;
+    LONG  Ct;
+    LONG  Id;
+    LONG  Number;
     short PhysicalNumber;
     short Side;
     short Address;
@@ -2769,21 +2803,21 @@ void ListPumps()
     short VolumeDspFormat;
     short ValueDspFormat;
     short PType;
-    long  PortID;
-    long  AttendantID;
+    LONG  PortID;
+    LONG  AttendantID;
     short AuthMode;
     short StackMode;
     short PrepayAllowed;
     short PreauthAllowed;
-    long  SlotZigBeeID;
-    long  MuxSlotZigBeeID;
+    LONG  SlotZigBeeID;
+    LONG  MuxSlotZigBeeID;
     short PriceControl;
     short HasPreset;
 
 #if defined(_WIN32)
     BSTR   Name;
 #elif defined(__linux__)
-    BSTR   Name[MAX_PATH];
+    TCHAR   Name[MAX_PATH];
 #endif
 
 	// Verifica conexao
@@ -2813,7 +2847,7 @@ void ListPumps()
                                                            &MuxSlotZigBeeID, &PriceControl,   &HasPreset) ) )
 #elif defined(__linux__)
 	   if( GoodResult( EZInterface.GetPumpPropertiesEx(Id, &Number,
-														   MakeBSTR(Name, sizeof(Name)/sizeof(wchar_t)),
+														   MakeBSTR(Name, MAX_PATH),
 														   &PhysicalNumber,
 														   &Side,            &Address,        &PriceLevel1,
 														   &PriceLevel2,     &PriceDspFormat, &VolumeDspFormat,
@@ -2823,7 +2857,7 @@ void ListPumps()
 														   &MuxSlotZigBeeID, &PriceControl,   &HasPreset) ) )
 #endif
 	   {
-          WriteMessage("\n  Bomba: %02ld  Nome: %S  PhysicalNumber: %d  Side: %d  Address: %d",
+          WriteMessage("\n  Bomba: %02ld  Nome: %s  PhysicalNumber: %d  Side: %d  Address: %d",
 								Number, Name, PhysicalNumber, Side, Address);
 
           WriteMessage("\n     PriceLevel1: %d  PriceLevel2: %d  PriceDspFormat: %d",
@@ -2846,13 +2880,13 @@ void ListPumps()
 //----------------------------------------------------------------------------
 void ListHoses()
 {
-    long   Idx;
-    long   Ct;
-    long   Id;
-    long   Number;
-    long   PumpID;
-    long   TankID;
-    long   PhysicalNumber;
+    LONG   Idx;
+    LONG   Ct;
+    LONG   Id;
+    LONG   Number;
+    LONG   PumpID;
+    LONG   TankID;
+    LONG   PhysicalNumber;
     double MtrTheoValue;
     double MtrTheoVolume;
     double MtrElecValue;
@@ -2904,7 +2938,7 @@ void ListHoses()
 //-----------------------------------------------------------------------------
 void CheckEvents()
 {
-    long  EvtCt;
+    LONG  EvtCt;
     short EvtType ;
 
     // Verifica se esta conectado ao servidor
@@ -2972,28 +3006,28 @@ void CheckEvents()
 //-----------------------------------------------------------------------------
 void EventPump()
 {
-    long   PumpID;
-    long  PumpNumber;
+    LONG   PumpID;
+    LONG  PumpNumber;
     short  State;
     short  ReservedFor;
-    long   ReservedBy;
-    long   HoseID;
-    long   HoseNumber;
-    long   HosePhysicalNumber;
-    long   GradeID;
-    long   GradeNumber;
+    LONG   ReservedBy;
+    LONG   HoseID;
+    LONG   HoseNumber;
+    LONG   HosePhysicalNumber;
+    LONG   GradeID;
+    LONG   GradeNumber;
     short  PriceLevel;
     double Price;
     double Volume;
     double Value;
     short  StackSize;
-    long   PhysicalNumber;
+    LONG   PhysicalNumber;
     short  Side;
     short  Address;
     short  PriceLevel1;
     short  PriceLevel2;
     short  PumpType;
-    long   PortID;
+    LONG   PortID;
     short  AuthMode;
     short  StackMode;
     short  PrepayAllowed;
@@ -3002,11 +3036,11 @@ void EventPump()
     short  ValueFormat;
     short  VolumeFormat;
     INT64  Tag;
-    long   AttendantID;
-    long   AttendantNumber;
+    LONG   AttendantID;
+    LONG   AttendantNumber;
     INT64  AttendantTag;
-    long   CardClientID;
-    long   CardClientNumber;
+    LONG   CardClientID;
+    LONG   CardClientNumber;
     INT64  CardClientTag;
 
 	char cbcID[MAX_PATH];
@@ -3018,11 +3052,11 @@ void EventPump()
     BSTR   AttendantName;
     BSTR   CardClientName;
 #elif defined(__linux__)
-    BSTR   GradeName[MAX_PATH];
-    BSTR   ShortGradeName[MAX_PATH];
-    BSTR   PumpName[MAX_PATH];
-    BSTR   AttendantName[MAX_PATH];
-    BSTR   CardClientName[MAX_PATH];
+    TCHAR   GradeName[MAX_PATH];
+    TCHAR   ShortGradeName[MAX_PATH];
+    TCHAR   PumpName[MAX_PATH];
+    TCHAR   AttendantName[MAX_PATH];
+    TCHAR   CardClientName[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3049,21 +3083,21 @@ void EventPump()
 														&ReservedFor,      &ReservedBy,         &HoseID,
 														&HoseNumber,       &HosePhysicalNumber,
 														&GradeID,          &GradeNumber,
-														MakeBSTR(GradeName, sizeof(GradeName)/sizeof(wchar_t)),
-														MakeBSTR(ShortGradeName, sizeof(ShortGradeName)/sizeof(wchar_t)),
+														MakeBSTR(GradeName, MAX_PATH),
+														MakeBSTR(ShortGradeName, MAX_PATH),
 														&PriceLevel,         &Price,
 														&Volume,           &Value,              &StackSize,
-														MakeBSTR(PumpName, sizeof(PumpName)/sizeof(wchar_t)),
+														MakeBSTR(PumpName, MAX_PATH),
 														&PhysicalNumber,     &Side,
 														&Address,          &PriceLevel1,        &PriceLevel2,
 														&PumpType,         &PortID,             &AuthMode,
 														&StackMode,        &PrepayAllowed,      &PreauthAllowed,
 														&PriceFormat,      &ValueFormat,        &VolumeFormat,
 														&Tag,              &AttendantID,        &AttendantNumber,
-														MakeBSTR(AttendantName, sizeof(AttendantName)/sizeof(wchar_t)),
+														MakeBSTR(AttendantName, MAX_PATH),
 														&AttendantTag,       &CardClientID,
 														&CardClientNumber,
-														MakeBSTR(CardClientName, sizeof(CardClientName)/sizeof(wchar_t)),
+														MakeBSTR(CardClientName, MAX_PATH),
 														&CardClientTag) ) )
 #endif
 	{
@@ -3074,13 +3108,13 @@ void EventPump()
 		WriteMessage("\n           ReservedBy %ld  HoseID %ld  HoseNumber %ld  HosePhisicalNumber %ld  GradeID %ld",
 									ReservedBy, HoseID, HoseNumber, HosePhysicalNumber, GradeID);
 
-		WriteMessage("\n           GradeName %S  GradeNumber %ld  ShortGradeName %S  PriceLevel %d",
+		WriteMessage("\n           GradeName %s  GradeNumber %ld  ShortGradeName %s  PriceLevel %d",
 									GradeName, GradeNumber, ShortGradeName, PriceLevel);
 
 		WriteMessage("\n           Price %.03f  Volume %.03f  Value %.03f  StackSize %d",
 									Price, Volume, Value, StackSize);
 
-		WriteMessage("\n           PumpName %S  PhysicalNumber %ld  Side %d Address %d  PriceLevel1 %d  PriceLevel2 %d",
+		WriteMessage("\n           PumpName %s  PhysicalNumber %ld  Side %d Address %d  PriceLevel1 %d  PriceLevel2 %d",
 									PumpName, PhysicalNumber, Side, Address, PriceLevel1, PriceLevel2);
 
 		WriteMessage("\n           PumpType %d  PortID %ld  AuthMode %d  StackMode %d  PrepayAllowed %d",
@@ -3089,10 +3123,10 @@ void EventPump()
 		WriteMessage("\n           PreauthAllowed %d  PriceFormat %d  ValueFormat %d  VolumeFormat %d  Tag %lld",
 								    PreauthAllowed, PriceFormat, ValueFormat, VolumeFormat, Tag);
 
-		WriteMessage("\n           AttendantID %ld  AttendantNumber %ld  AttendantName %S  AttendantTag %lld",
+		WriteMessage("\n           AttendantID %ld  AttendantNumber %ld  AttendantName %s  AttendantTag %lld",
 									AttendantID, AttendantNumber, AttendantName, AttendantTag);
 
-		WriteMessage("\n           CardClientID= %ld  CardClientNumber %ld  CardClientName %S  CardClientTag %lld",
+		WriteMessage("\n           CardClientID= %ld  CardClientNumber %ld  CardClientName %s  CardClientTag %lld",
 									CardClientID, CardClientNumber, CardClientName, CardClientTag);
 
 		CompanyID(HoseNumber, PumpNumber, cbcID);
@@ -3103,16 +3137,16 @@ void EventPump()
 //-----------------------------------------------------------------------------
 void EventDelivery()
 {
-	long   DeliveryID;
-    long   HosePhysicalNumber;
-    long   TankID;
-    long   TankNumber;
+	LONG   DeliveryID;
+    LONG   HosePhysicalNumber;
+    LONG   TankID;
+    LONG   TankNumber;
     short  DeliveryState;
     short  DeliveryType;
     double Volume2;
     DATE   CompletedDT;
-    long   LockedBy;
-    long   Age;
+    LONG   LockedBy;
+    LONG   Age;
     DATE   ClearedDT;
     double OldVolumeETot;
     double OldVolume2ETot;
@@ -3120,28 +3154,28 @@ void EventDelivery()
     double NewVolumeETot;
     double NewVolume2ETot;
     double NewValueETot;
-    long   Duration;
+    LONG   Duration;
 
-    long   PumpID;
-    long   PumpNumber;
-    long   HoseID;
-    long   HoseNumber;
+    LONG   PumpID;
+    LONG   PumpNumber;
+    LONG   HoseID;
+    LONG   HoseNumber;
     //short  HosePhisicalNumber;
-    long   GradeID;
-    long   GradeNumber;
+    LONG   GradeID;
+    LONG   GradeNumber;
 
 	short  PriceLevel;
     double Price;
     double Volume;
     double Value;
-	long   ReservedBy;
+	LONG   ReservedBy;
 
 	INT64  Tag;
-    long   AttendantID;
-    long   AttendantNumber;
+    LONG   AttendantID;
+    LONG   AttendantNumber;
     INT64  AttendantTag;
-    long   CardClientID;
-    long   CardClientNumber;
+    LONG   CardClientID;
+    LONG   CardClientNumber;
     INT64  CardClientTag;
 
 	char cbcID[MAX_PATH];
@@ -3155,13 +3189,13 @@ void EventDelivery()
     BSTR   AttendantName;
     BSTR   CardClientName;
 #elif defined(__linux__)
-	BSTR   PumpName[MAX_PATH];
-    BSTR   TankName[MAX_PATH];
-    BSTR   GradeName[MAX_PATH];
-    BSTR   GradeCode[MAX_PATH];
-    BSTR   GradeShortName[MAX_PATH];
-    BSTR   AttendantName[MAX_PATH];
-    BSTR   CardClientName[MAX_PATH];
+	TCHAR   PumpName[MAX_PATH];
+    TCHAR   TankName[MAX_PATH];
+    TCHAR   GradeName[MAX_PATH];
+    TCHAR   GradeCode[MAX_PATH];
+    TCHAR   GradeShortName[MAX_PATH];
+    TCHAR   AttendantName[MAX_PATH];
+    TCHAR   CardClientName[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3184,23 +3218,23 @@ void EventDelivery()
 #elif defined(__linux__)
 	if( GoodResult( EZInterface.GetNextDeliveryEventEx3(&DeliveryID,         &HoseID,           &HoseNumber,
 														&HosePhysicalNumber, &PumpID,           &PumpNumber,
-														MakeBSTR(PumpName, sizeof(PumpName)/sizeof(wchar_t)),
+														MakeBSTR(PumpName, MAX_PATH),
 														&TankID,           &TankNumber,
-														MakeBSTR(TankName, sizeof(TankName)/sizeof(wchar_t)),
+														MakeBSTR(TankName, MAX_PATH),
 														&GradeID,            &GradeNumber,
-														MakeBSTR(GradeName, sizeof(GradeName)/sizeof(wchar_t)),
-														MakeBSTR(GradeShortName, sizeof(GradeShortName)/sizeof(wchar_t)),
-														MakeBSTR(GradeCode, sizeof(GradeCode)/sizeof(wchar_t)),
+														MakeBSTR(GradeName, MAX_PATH),
+														MakeBSTR(GradeShortName, MAX_PATH),
+														MakeBSTR(GradeCode, MAX_PATH),
 														&DeliveryState,      &DeliveryType,     &Volume,
 														&PriceLevel,         &Price,            &Value,         &Volume2, &CompletedDT,
 														&LockedBy,           &ReservedBy,       &AttendantID,   &Age,     &ClearedDT,
 														&OldVolumeETot,      &OldVolume2ETot,   &OldValueETot,
 														&NewVolumeETot,      &NewVolume2ETot,   &NewValueETot,  &Tag,
 														&Duration,           &AttendantNumber,
-														MakeBSTR(AttendantName, sizeof(AttendantName)/sizeof(wchar_t)),
+														MakeBSTR(AttendantName, MAX_PATH),
 														&AttendantTag,
 														&CardClientID,       &CardClientNumber,
-														MakeBSTR(CardClientName, sizeof(CardClientName)/sizeof(wchar_t)),
+														MakeBSTR(CardClientName, MAX_PATH),
 														&CardClientTag) ) )
 #endif
 	{
@@ -3211,13 +3245,13 @@ void EventDelivery()
 			WriteMessage("\n------ DeliveryEvent:  DeliveryID %ld  HoseID %ld  HoseNumber %ld  HosePhysicalNumber %ld",
 										DeliveryID, HoseID, HoseNumber, HosePhysicalNumber);
 
-			WriteMessage("\n           PumpID %ld  PumpNumber %ld  PumpName %S  TankID %ld",
+			WriteMessage("\n           PumpID %ld  PumpNumber %ld  PumpName %s  TankID %ld",
 										PumpID, PumpNumber,  PumpName, TankID);
 
-			WriteMessage("\n           TankNumber %ld  TankName %S  GradeID %ld  GradeNumber %ld",
+			WriteMessage("\n           TankNumber %ld  TankName %s  GradeID %ld  GradeNumber %ld",
 										TankNumber, TankName, GradeID, GradeNumber);
 
-			WriteMessage("\n           GradeName %S  GradeShortName %S  GradeCode %S  DeliveryState %d",
+			WriteMessage("\n           GradeName %s  GradeShortName %s  GradeCode %s  DeliveryState %d",
 										GradeName, GradeShortName, GradeCode, DeliveryState);
 
 			WriteMessage("\n           DeliveryType %d  Volume %.03f  PriceLevel %d  Price %.03f",
@@ -3235,10 +3269,10 @@ void EventDelivery()
 			WriteMessage("\n           NewVolume2ETot %.03f  NewValueETot %.03f  Tag %lld  Duration %ld",
 										NewVolume2ETot, NewValueETot, Tag, Duration);
 
-			WriteMessage("\n           AttendantNumber %ld  AttendantName %S  AttendantTag %lld  CardClientID %ld",
+			WriteMessage("\n           AttendantNumber %ld  AttendantName %s  AttendantTag %lld  CardClientID %ld",
 										AttendantNumber, AttendantName, AttendantTag, CardClientID);
 
-			WriteMessage("\n           CardClientNumber %ld  CardClientName %S  CardClientTag %lld",
+			WriteMessage("\n           CardClientNumber %ld  CardClientName %s  CardClientTag %lld",
 										CardClientNumber, CardClientName, CardClientTag);
 
 			CompanyID(HoseNumber, PumpNumber, cbcID);
@@ -3260,20 +3294,20 @@ void EventDelivery()
 //-----------------------------------------------------------------------------
 /*void EventCardRead()
 {
-    long  CardReadID;
-    long  Number;
+    LONG  CardReadID;
+    LONG  Number;
     short CardType;
-    long  ParentID;
+    LONG  ParentID;
     DATE  TimeStamp;
 	INT64 Tag;
-	long  PumpID;
+	LONG  PumpID;
 
 #if defined(_WIN32)
 	BSTR  Name;
 #elif defined(__linux__)	//BSTR EventText[MAX_PATH];
-	BSTR EventText[MAX_PATH];
+	TCHAR EventText[MAX_PATH];
 
-	BSTR  Name[MAX_PATH];
+	TCHAR  Name[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3286,13 +3320,13 @@ void EventDelivery()
 												     &Tag,        &TimeStamp) ) )
 #elif defined(__linux__)
 	if( GoodResult( EZInterface.GetNextCardReadEvent(&CardReadID, &Number,
-													 MakeBSTR(Name, sizeof(Name)/sizeof(wchar_t)),
+													 MakeBSTR(Name, MAX_PATH),
 													 &PumpID,     &CardType, &ParentID,
 													 &Tag,        &TimeStamp) ) )
 #endif
 	{
 
-		WriteMessage("\n------ CardReadEvent:  CardReadID %ld  Number %ld  Name %S  PumpID %ld",
+		WriteMessage("\n------ CardReadEvent:  CardReadID %ld  Number %ld  Name %s  PumpID %ld",
 									CardReadID, Number, Name, PumpID);
 
 		WriteMessage("\n           CardType %d  ParentID %ld  Tag %lld  TimeStamp %ld",
@@ -3301,23 +3335,23 @@ void EventDelivery()
 		switch(CardType )
 		{
 		  case ATTENDANT_TAG_TYPE:
-			WriteMessage("\n           Attendant: %S  Tag %lld", Name, Tag);
+			WriteMessage("\n           Attendant: %s  Tag %lld", Name, Tag);
 		    break;
 
 		  case BLOCKED_ATTENDANT_TAG_TYPE:
-			WriteMessage("\n           Blocked attendant: %S  Tag %lld", Name, Tag);
+			WriteMessage("\n           Blocked attendant: %s  Tag %lld", Name, Tag);
 		    break;
 
 		  case WRONG_SHIFT_ATTENDANT_TAG_TYPE:
-			WriteMessage("\n           Wrong shift attendant: %S  Tag %lld", Name, Tag);
+			WriteMessage("\n           Wrong shift attendant: %s  Tag %lld", Name, Tag);
 			break;
 
 		  case CLIENT_TAG_TYPE:
-		  	WriteMessage("\n           Client: %S  Tag %lld", Name, Tag);
+		  	WriteMessage("\n           Client: %s  Tag %lld", Name, Tag);
 			break;
 
 		  case BLOCKED_CLIENT_TAG_TYPE:
-			WriteMessage("\n           Blocked Client: %S  Tag %lld", Name, Tag);
+			WriteMessage("\n           Blocked Client: %s  Tag %lld", Name, Tag);
 		    break;
 
 		  case UNKNOWN_TAG_TYPE:
@@ -3336,27 +3370,27 @@ void EventDelivery()
 //-----------------------------------------------------------------------------
 void EventDbLogETotals()
 {
-	long   HoseID;
+	LONG   HoseID;
 	double Volume;
     double Value;
     double VolumeETot;
     double ValueETot;
-    long   HoseNumber;
-    long   HosePhysicalNumber;
-    long   PumpID;
-    long   PumpNumber;
-	long   TankID;
-    long   TankNumber;
-    long   GradeID;
+    LONG   HoseNumber;
+    LONG   HosePhysicalNumber;
+    LONG   PumpID;
+    LONG   PumpNumber;
+	LONG   TankID;
+    LONG   TankNumber;
+    LONG   GradeID;
 
 #if defined(_WIN32)
     BSTR   PumpName;
     BSTR   TankName;
     BSTR   GradeName;
 #elif defined(__linux__)
-    BSTR   PumpName[MAX_PATH];
-    BSTR   TankName[MAX_PATH];
-    BSTR   GradeName[MAX_PATH];
+    TCHAR   PumpName[MAX_PATH];
+    TCHAR   TankName[MAX_PATH];
+    TCHAR   GradeName[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3375,11 +3409,11 @@ void EventDbLogETotals()
 															&VolumeETot, &ValueETot,
 															&HoseNumber, &HosePhysicalNumber,
 															&PumpID,     &PumpNumber,
-															MakeBSTR(PumpName, sizeof(PumpName)/sizeof(wchar_t)),
+															MakeBSTR(PumpName, MAX_PATH),
 															&TankID,     &TankNumber,
-															MakeBSTR(TankName, sizeof(TankName)/sizeof(wchar_t)),
+															MakeBSTR(TankName, MAX_PATH),
 															&GradeID,
-															MakeBSTR(TankName, sizeof(TankName)/sizeof(wchar_t))) ))
+															MakeBSTR(TankName, MAX_PATH)) ))
 #endif
 	{
 		WriteMessage("\n------ HoseETotalEvent:  HoseID %ld  Volume %.03f  Value %.03f",
@@ -3391,13 +3425,13 @@ void EventDbLogETotals()
 		WriteMessage("\n             HoseNumber %ld  HosePhysicalNumber %ld",
 							                HoseNumber, HosePhysicalNumber);
 
-		WriteMessage("\n             PumpID %ld  PumpNumber %ld  PumpName %S",
+		WriteMessage("\n             PumpID %ld  PumpNumber %ld  PumpName %s",
 											PumpID, PumpNumber, PumpName);
 
-		WriteMessage("\n             TankID %ld  TankNumber %ld TankName %S",
+		WriteMessage("\n             TankID %ld  TankNumber %ld TankName %s",
 											TankID, TankNumber, TankName);
 
-		WriteMessage("\n             GradeID %ld  GradeName %S",
+		WriteMessage("\n             GradeID %ld  GradeName %s",
 											GradeID, GradeName);
 
 	}
@@ -3406,12 +3440,12 @@ void EventDbLogETotals()
 //-----------------------------------------------------------------------------
 void EventServer()
 {
-	long EventID;
+	LONG EventID;
 
 #if defined(_WIN32)
 	BSTR EventText;
 #elif defined(__linux__)
-	BSTR EventText[MAX_PATH];
+	TCHAR EventText[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3421,9 +3455,9 @@ void EventServer()
 #if defined(_WIN32)
 	if( GoodResult( EZInterface.GetNextServerEvent(&EventID, &EventText) ) )
 #elif defined(__linux__)
-	if( GoodResult( EZInterface.GetNextServerEvent(&EventID, MakeBSTR(EventText, sizeof(EventText)/sizeof(wchar_t))) ))
+	if( GoodResult( EZInterface.GetNextServerEvent(&EventID, MakeBSTR(EventText, MAX_PATH)) ))
 #endif
-		WriteMessage("\n------ ServerEvent:   EventID %ld  EventText %S",
+		WriteMessage("\n------ ServerEvent:   EventID %ld  EventText %s",
 										EventID, EventText);
 
 }
@@ -3431,13 +3465,13 @@ void EventServer()
 //-----------------------------------------------------------------------------
 void EventClient()
 {
-	long EventID;
-	long ClientID;
+	LONG EventID;
+	LONG ClientID;
 
 #if defined(_WIN32)
 	BSTR EventText;
 #elif defined(__linux__)
-	BSTR EventText[MAX_PATH];
+	TCHAR EventText[MAX_PATH];
 #endif
 
     // Verifica se esta conectado ao servidor
@@ -3447,9 +3481,9 @@ void EventClient()
 #if defined(_WIN32)
 	if( GoodResult( EZInterface.GetNextClientEvent(&ClientID, &EventID, &EventText) ) )
 #elif defined(__linux__)
-	if( GoodResult( EZInterface.GetNextClientEvent(&ClientID, &EventID, MakeBSTR(EventText, sizeof(EventText)/sizeof(wchar_t))) ))
+	if( GoodResult( EZInterface.GetNextClientEvent(&ClientID, &EventID, MakeBSTR(EventText, MAX_PATH)) ))
 #endif
-		WriteMessage("\n------ ClientEvent: ClientID %ld  EventID %ld  EventText %S",
+		WriteMessage("\n------ ClientEvent: ClientID %ld  EventID %ld  EventText %s",
 								 ClientID, EventID, EventText);
 
 }

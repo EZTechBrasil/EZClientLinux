@@ -1,7 +1,7 @@
 
 /*****************************************************************
  *
- * Copyright (C) 2009-2012 EZTech Tecnologia e Automação Ltda.
+ * Copyright (C) 2009-2012 EZTech Tecnologia e Automaï¿½ï¿½o Ltda.
  * All rights reserved.
  *
  * Created 01/06/2010
@@ -22,7 +22,7 @@
  *
  ******************************************************************/
 
-#define NULL_ID 0xFFFFFFFF
+#define NULL_ID -1
 
 
 enum EClients
@@ -510,7 +510,7 @@ typedef enum
 //#if !defined(_LINUX_)
 #if defined(_WIN32)
 
-typedef long (__cdecl *TDriverEntry) (void* );
+typedef LONG (__cdecl *TDriverEntry) (void* );
 
 typedef struct TDriverArgs
 {
@@ -519,12 +519,12 @@ typedef struct TDriverArgs
 	short _driverID ;
 	short _driverNo ;
 	wchar_t _protocolINIKey[ 21 ] ;
-	long _protocolID ;
-	long _deviceType ;
+	LONG _protocolID ;
+	LONG _deviceType ;
 	bool _standalone ;
 	wchar_t _serialNo[ 11 ];
 	wchar_t _portName[ 21 ];
-	long _runningTotalRate ;
+	LONG _runningTotalRate ;
 	TDriverEntry _driverEntry ;
 } TDriverArgs ;
 
@@ -652,28 +652,28 @@ extern HINSTANCE g_hModule ;
 #endif
 
 /*
-<DH = data e hora>,<TD = tipo de device>, <ND = numero do device>,<TE = tipo de evento>, <DU = duração>,<DES = descrição de evento> 
+<DH = data e hora>,<TD = tipo de device>, <ND = numero do device>,<TE = tipo de evento>, <DU = duraï¿½ï¿½o>,<DES = descriï¿½ï¿½o de evento> 
 
 TD  pode ser a seguinte :-
-•	SVRC  - ezserver service ,               ND = 1 sempre 
-•	PUMP - Pump ou PA nosso caso,  ND = numero do PA 
-•	EZID - EZID/EZRemote,                  ND = numero de serie do EZID 
-•	TANK - sonda de medidor de tanque, ND = numero do tanque  
-•	HOSE - Bico                        ND = Numero único do bico 
-•	GRADE - comustivel   ND  numero do compustivel 
-•	Etc 
+ï¿½	SVRC  - ezserver service ,               ND = 1 sempre 
+ï¿½	PUMP - Pump ou PA nosso caso,  ND = numero do PA 
+ï¿½	EZID - EZID/EZRemote,                  ND = numero de serie do EZID 
+ï¿½	TANK - sonda de medidor de tanque, ND = numero do tanque  
+ï¿½	HOSE - Bico                        ND = Numero ï¿½nico do bico 
+ï¿½	GRADE - comustivel   ND  numero do compustivel 
+ï¿½	Etc 
 
 TE pode ser a seguinte :-
-•	INITIALIZE -  device foi incializada  ( serviço inicializada ou objeto criada ) 
-•	TERMINATE – device for terminada ( serviço parado, ou objeto deletada ) 
-•	START  -  device començou a responder 
-•	STOP  -  device parou de responder por mais do que 30 minutos 
-•	STOP/START   -  device parou e voltou de responder por DU segundos, mínimo de 30 segundos ( configurável ) 
-•	EDIT  -  configuracão do device foi alterado 
-•	PRICE -  mudança de preço foi feito pelo sistema 
-•	OFFPRICE -  mudança de preço foi feito local na bomba 
-•	OFFLINE – abastecimento off-line 
-•	etc 
+ï¿½	INITIALIZE -  device foi incializada  ( serviï¿½o inicializada ou objeto criada ) 
+ï¿½	TERMINATE ï¿½ device for terminada ( serviï¿½o parado, ou objeto deletada ) 
+ï¿½	START  -  device comenï¿½ou a responder 
+ï¿½	STOP  -  device parou de responder por mais do que 30 minutos 
+ï¿½	STOP/START   -  device parou e voltou de responder por DU segundos, mï¿½nimo de 30 segundos ( configurï¿½vel ) 
+ï¿½	EDIT  -  configuracï¿½o do device foi alterado 
+ï¿½	PRICE -  mudanï¿½a de preï¿½o foi feito pelo sistema 
+ï¿½	OFFPRICE -  mudanï¿½a de preï¿½o foi feito local na bomba 
+ï¿½	OFFLINE ï¿½ abastecimento off-line 
+ï¿½	etc 
 */ 
 
 typedef enum 

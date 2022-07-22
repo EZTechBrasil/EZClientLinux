@@ -1,0 +1,62 @@
+Fri Jul 22 15:45:50 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     1ms Host = 192.168.1.13
+Fri Jul 22 15:45:52 2022 ***ERROR line 677 in <../../COMMON/Process.cpp> errno = Operation now in progress [115]
+  2015ms Initialise CS 0
+     0ms Client 15 Socket failed!!
+     6ms Watchdog closed
+Fri Jul 22 15:45:52 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+Fri Jul 22 15:45:52 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     0ms Host = 192.168.1.13
+Fri Jul 22 15:45:54 2022 ***ERROR line 677 in <../../COMMON/Process.cpp> errno = Operation now in progress [115]
+  2013ms Initialise CS 0
+     1ms Client 15 Socket failed!!
+     7ms Watchdog closed
+Fri Jul 22 15:45:54 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+Fri Jul 22 15:45:54 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     0ms Host = 192.168.1.13
+Fri Jul 22 15:45:56 2022 ***ERROR line 677 in <../../COMMON/Process.cpp> errno = Operation now in progress [115]
+  2001ms Initialise CS 0
+     0ms Client 15 Socket failed!!
+     3ms Watchdog closed
+Fri Jul 22 15:45:56 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+Fri Jul 22 15:45:56 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     1ms Host = 192.168.1.13
+Fri Jul 22 15:45:58 2022 ***ERROR line 677 in <../../COMMON/Process.cpp> errno = Operation now in progress [115]
+  2003ms Initialise CS 0
+     0ms Client 15 Socket failed!!
+     8ms Watchdog closed
+Fri Jul 22 15:45:58 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+Fri Jul 22 15:45:58 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     1ms Host = 192.168.1.13
+Fri Jul 22 15:46:11 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     0ms Host = 192.168.1.113
+     4ms Initialise CS 0
+    50ms Logon() successful Session ID 133029555110000028 ClientType 00000C47
+     3ms CheckVersions [2,5,7] <> [2,5,7]
+     0ms Client 15 ECS 0 LCS 0
+Fri Jul 22 15:51:20 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     0ms Host = 192.168.1.113
+     4ms Initialise CS 0
+    53ms Logon() successful Session ID 133029555110000029 ClientType 00000C47
+     3ms CheckVersions [2,5,7] <> [2,5,7]
+     1ms Client 15 ECS 0 LCS 0
+Fri Jul 22 16:02:03 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     0ms Host = 192.168.1.113
+     4ms Initialise CS 0
+    52ms Logon() successful Session ID 133029555110000030 ClientType 00000C47
+     3ms CheckVersions [2,5,7] <> [2,5,7]
+     0ms Client 15 ECS 0 LCS 0
+Fri Jul 22 16:03:56 2022 ****TIME <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+112233ms ClientLogoff 15 logged off, 0.
+     4ms Watchdog closed
+Fri Jul 22 16:03:56 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+Fri Jul 22 16:16:35 2022 ***START <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+     7ms Host = 192.168.1.113
+     5ms Initialise CS 0
+    53ms Logon() successful Session ID 133029555110000031 ClientType 00000C47
+     2ms CheckVersions [2,5,7] <> [2,5,7]
+     0ms Client 15 ECS 0 LCS 0
+Fri Jul 22 16:17:39 2022 ****TIME <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>
+ 63355ms ClientLogoff 15 logged off, 0.
+    16ms Watchdog closed
+Fri Jul 22 16:17:39 2022 ****STOP <EZServer client DLL Version(2,5,7,3:B7) Built(Jul 22 2022 at 15:15:49)>

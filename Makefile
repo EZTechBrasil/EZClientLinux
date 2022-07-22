@@ -4,12 +4,10 @@
 #   Empresa: EZTech Tecnologia
 #			 http://www.eztech.ind.br/
 #
-#   Data   : 31/10/2012  
+#   Data   : 22/07/2022 
 #
 # Observacoes: 
 #
-#		*. para compilacao com GCC em ambiente Windows e necessario a instalacao
-#		   do pacote MingW (http://www.mingw.org/)
 #
 #		*. para compilar com GCC para Windows ou Linux utilize o script Makefile
 #		   utilize os seguintes comandos:
@@ -28,9 +26,13 @@ OUT = $(BIN)/$(PRJ)
 
 RES	= windres -v -I../ -i
 
-GCC	= g++-5 -O3 -Wno-deprecated -c 
-LNK	= g++-5 -static-libgcc
-# LNK	= g++-5 -static-libgcc -static-libstdc++
+# 32 bit 
+# GCC	= g++ -m32 -Os -Wall -Wno-deprecated -c -Wno-write-strings -Wno-format -Wno-unused-result
+# LNK	= g++ -m32 -static-libgcc -static-libstdc++
+
+# 64 bit 
+GCC	= g++ -Os -Wall -Wno-deprecated -c -Wno-write-strings -Wno-format -Wno-unused-result
+LNK	= g++ -static-libgcc -static-libstdc++
 
 OBJ = $(BIN)/ClientMain.o	$(BIN)/EZClient.o
 WRC = $(BIN)/EZClientCpp.o
